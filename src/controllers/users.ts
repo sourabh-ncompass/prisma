@@ -2,6 +2,26 @@ import { NextFunction, Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
+const getUser = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const userId = +id;
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+    res.json({
+      user,
+    });
+  } catch (e: any) {
+    next(e);
+  }
+};
+
 const getUsers = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const users = await prisma.user.findMany();
@@ -39,7 +59,6 @@ const createMultipleUsers = async (
 ) => {
   try {
     const { usersData } = req.body;
-    console.log(usersData);
     const createdUsers = await prisma.user.createMany({
       data: usersData,
     });
@@ -47,26 +66,6 @@ const createMultipleUsers = async (
     res.json({
       message: "Multiple users created",
       users: createdUsers,
-    });
-  } catch (e: any) {
-    next(e);
-  }
-};
-
-const getUser = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { id } = req.params;
-    const userId = +id;
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
-    if (!user) {
-      return res.status(404).json({
-        message: "User not found",
-      });
-    }
-    res.json({
-      user,
     });
   } catch (e: any) {
     next(e);
